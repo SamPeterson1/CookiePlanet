@@ -1,13 +1,19 @@
 package GUI;
 
 
+import java.awt.AlphaComposite;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Vector;
 
+import javax.swing.ImageIcon;
+
+import World.Building;
 import World.Player;
 import World.World;
 
@@ -16,10 +22,9 @@ public class GUICanvas extends Canvas {
 	private static final long serialVersionUID = -557652432650828632L;
 	private int width;
 	private int height;
-	private int camX;
-	private int camY;
 	private World world;
 	private Player player;
+	private Image bagBG = new ImageIcon(getClass().getResource("/Assets/BagBG.png")).getImage();
 	
 	
 	public GUICanvas(int width, int height) {
@@ -32,39 +37,109 @@ public class GUICanvas extends Canvas {
 	
 	public void draw(Graphics2D g2) {
 		BufferedImage img = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage tiles = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage resources = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = (Graphics2D) img.getGraphics();
 		this.clear(g2);
-		int fineX = camX%32;
-		int fineY = camY%32;
-		int cx = (int) Math.floor(camX/32);
-		int cy = (int) Math.floor(camY/32);
-		for(int i = cx-1; i < cx+33; i ++) {
-			for(int j = cy-1; j < cy+33; j ++) {
-				if(!(i < 0 || i >= 64 || j < 0 || j >= 64)) {
-					g.drawImage(world.getTile(i, j).getImg(), (i-cx)*32-fineX, (j-cy)*32-fineY, null);
-				} else {
-					int x = i;
-					int y = j;
-					if(x < 0) {
-						x += world.getSize();
-					}
-					if(y < 0) {
-						y += world.getSize();
-					}
-					if(x >= 64) {
-						x -= world.getSize();
-					}
-					if(y >= 64) {
-						y -= world.getSize();
-					}
-					g.drawImage(world.getTile(x, y).getImg(), (i-cx)*32-fineX, (j-cy)*32-fineY, null);
-				}
+		
+		AlphaComposite alcom = AlphaComposite.getInstance(AlphaComposite.SRC_OVER);
+        g.setComposite(alcom);
+		
+		Graphics t = tiles.getGraphics();
+		Graphics r = resources.getGraphics();
+		for(int i = 0; i < world.getSize(); i ++) {
+			for(int ii = 0; ii < world.getSize(); ii ++) {
+				int[] screen = Camera.worldToScreen(i, ii, 32, 32);
+				t.drawImage(world.getTile(i, ii).getImg(), screen[0], screen[1], null);
+				if(world.getResourceID(i, ii) != 0)
+					r.drawImage(world.getResource(i, ii).getImage(), screen[0], screen[1], null);
 			}
 		}
+		
+		g.drawImage(tiles, 0, 0, null);
+		g.drawImage(resources, 0, 0, null);
+		
+		for(Building b: world.getBuildings()) {
+			int[] pos = Camera.worldToScreen(b.getX(), b.getY(), 512, 32);
+			//if(pos[0] > -1024 && pos[0] < this.getWidth() + 1024 && pos[1] > -1024 && pos[1] < this.getWidth() + 1024) {
+				g.drawImage(b.getImage(), pos[0], pos[1], null);
+				for(Building con: b.getConnected()) {
+					int[] pos2 = Camera.worldToScreen(con.getX(), con.getY(), 512, 32);
+					//if(Math.abs(pos2[0] - pos[0]) < 1024 && Math.abs(pos2[1]- pos[1]) < 1024)
+						g.drawLine(pos[0], pos[1], pos2[0], pos2[1]);
+	 			}
+			//}
+		}
+		
 		Image person = player.getImage();
 		g.drawImage(person,	this.getWidth()/2-person.getWidth(null)/2, this.getHeight()/2-person.getWidth(null)/2, null);
 		
-		this.render(g2, img);		
+		if(player.inBag()) {
+			g.drawImage(bagBG, 895, 785, this.getWidth()-895, this.getHeight()-763, null);
+			g.setColor(Color.BLACK);
+			g.fillRect(890, 780, 130, 5);
+			g.fillRect(890, 780, 5, 240);
+			g.setColor(new Color(0, 0, 0, 100));
+			for(int i = 0; i < 8; i ++) {
+				int x = i%2;
+				int y = i/2;
+				g.fillRect(x*55 + 905, y*55 + 795, 50, 50);
+				if(i < player.getBag().size()) {
+					g.drawImage(player.getBag().get(i).getImage(), x*55 + 905, y*55 + 797, null);
+				}
+			}
+		}
+		
+		
+		HashMap<Integer, Vector<Integer>> tethers = world.getTethers();
+		int tetherDist = world.getTetherDist();
+		for(Integer key: tethers.keySet()) {
+		
+			Vector<Integer> tether = tethers.get(key);
+			int[] pos = Camera.worldToScreen(tether.get(0), tether.get(1), tetherDist, 1);
+
+			g.drawImage(player.getImage(), pos[0], pos[1], null);
+			
+			if(pos[0] > -tetherDist && pos[0] < this.getWidth() + tetherDist && pos[1] > -tetherDist && pos[1] < this.getWidth() + tetherDist) {
+				int index = 0;
+				for(Integer id: tether) {
+					if(index > 1) {
+						int[] pos2 = Camera.worldToScreen(tethers.get(id).get(0), tethers.get(id).get(1), tetherDist, 1);
+						if(Math.abs(pos2[0] - pos[0]) < tetherDist && Math.abs(pos2[1]- pos[1]) < tetherDist)
+							g.drawLine(pos[0]+16, pos[1]+16, pos2[0]+16, pos2[1]+16);
+					}
+					index ++;
+				}
+			}
+		}
+		
+		
+		
+		this.render(g2, img);
+		
+	}
+	
+	public int[] screenToWorld(int x, int y) {
+		
+		//a = width/2+(x*32-camY) --> a - width/2 = x*32-camY  --> a - width/2 + camY = x*32 --> x = (a - (width/2) + camY)/32
+		
+		x = (x - (this.getWidth()/2) + Camera.x)/32;
+		y = (y - (this.getWidth()/2) + Camera.y)/32;
+		
+		int testX = x - world.getSize();
+		int testY = y - world.getSize();
+		
+		if(Math.abs(testX*32-Camera.x) > 16*32 + 100 && testX >= 0) {
+			x = testX;
+		}
+		
+		if(Math.abs(testY*32-Camera.y) > 16*32 + 100 && testY >= 0) {
+			y = testY;
+		}
+		
+		int[] retVal = {x, y};
+		
+		return retVal;
 	}
 
 	public void clear(Graphics g) {
@@ -104,26 +179,6 @@ public class GUICanvas extends Canvas {
 
 	public void setWorld(World world) {
 		this.world = world;
-	}
-	
-	public void camLeft(int amount) {
-		this.camX -= amount;
-		if(this.camX <= -16*32) camX = world.getSize()*32 - 16*32;
-	}
-	
-	public void camRight(int amount) {
-		this.camX += amount;
-		if(this.camX >= world.getSize()*32 - 16*32) camX = -16*32;
-	}
-	
-	public void camUp(int amount) {
-		this.camY -= amount;
-		if(this.camY <= -16*32) camY = world.getSize()*32 - 16*32;
-	}
-	
-	public void camDown(int amount) {
-		this.camY += amount;
-		if(this.camY >= world.getSize()*32 - 16*32) camY = -16*32;
 	}
 	
 	public void setPlayer(Player player) {

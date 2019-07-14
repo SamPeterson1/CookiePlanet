@@ -1,12 +1,15 @@
 package World;
 
 import java.awt.Image;
+import java.util.ArrayList;
 
 public class Tile {
 	
 	protected boolean habitable;
 	protected Image img;
 	protected int ID;
+	protected boolean animated;
+	protected ArrayList<Image> sprites;
 	
 	public Tile(String tileSet, int imgLoc, int ID, boolean habitable) {
 		
@@ -18,6 +21,14 @@ public class Tile {
 		
 	}
 	
+	public Tile(String tileSet, ArrayList<Image> sprites, int ID, boolean habitable) {
+		
+		this.habitable = habitable;
+		this.sprites = sprites;
+		this.ID = ID;
+		
+	}
+
 	public boolean isHabitable() {
 		return habitable;
 	}
