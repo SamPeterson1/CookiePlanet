@@ -1,5 +1,7 @@
 package World;
 
+import java.awt.Color;
+
 public class Consumable {
 	
 	int ID;
@@ -8,14 +10,20 @@ public class Consumable {
 	int max;
 	String name;
 	boolean tetherable;
+	Color c;
 	
-	public Consumable(int ID, String name, int production, int max, boolean tetherable) {
+	public Consumable(int ID, Color c, String name, int production, int max, boolean tetherable) {
 		this.ID = ID;
 		this.name = name;
 		this.tetherable = tetherable;
 		this.amount = 0;
 		this.production = production;
 		this.max = max;
+		this.c = c;
+	}
+	
+	public Color getColor() {
+		return this.c;
 	}
 	
 	public boolean tick() {
@@ -24,13 +32,20 @@ public class Consumable {
 	}
 	
 	public int setAmount(int amount) {
-		if(amount <= this.max) {
+		if(amount <= this.max & amount >= 0) {
 			this.amount = amount;
 			return 0;
+		} else if(amount < 0) {
+			this.amount = 0;
+			return -1;
 		} else {
 			this.amount = this.max;
 			return amount - this.max;
 		}
+	}
+	
+	public int getMax() {
+		return this.max;
 	}
 	
 	public int removeAmount(int amount) {

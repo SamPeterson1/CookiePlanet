@@ -14,7 +14,7 @@ import World.World;
 
 public class Main {
 	
-	public static final int LOOP_SPEED_MS = 500;
+	public static final int LOOP_SPEED_MS = 10;
 	public static final int WIDTH = 1020;
 	public static final int HEIGHT = 1020;
 

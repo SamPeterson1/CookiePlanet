@@ -12,6 +12,12 @@ public class BaseNetwork {
 		this.consumables = new ArrayList<Consumable>();
 	}
 	
+	public void transferResources() {
+		for(Consumable c: this.consumables) {
+			this.transferResource(c.getName());
+		}
+	}
+	
 	public void transferResource(String name) {
 		int surplus = 0;
 		float leftOver = 0;
@@ -33,10 +39,13 @@ public class BaseNetwork {
 		for(Building b: this.buildings) {
 			Consumable c = b.getConsumable(name);
 			if(c.getProduction() < 0) {
+				c.tick();
 				int consumption = -(c.getProduction());
 				float given = surplus*consumption/sumConsumption;
-				totalGiven += given;
-				leftOver += c.addAmount((int)(given));
+				float capped = given;
+				if(capped > 5) capped = 5;
+				totalGiven += capped;
+				leftOver += c.addAmount((int)capped);
 			}
 		}
 		
@@ -44,6 +53,7 @@ public class BaseNetwork {
 			Consumable c = b.getConsumable(name);
 			if(c.getProduction() >= 0) {
 				c.addAmount((int) ((leftOver-totalGiven)/numNonConsuming));
+				c.tick();
 			}
 		}
 	}

@@ -54,22 +54,23 @@ public class GUIFrame {
 	    boolean running=true;
 	    boolean iterateNext = false;
 	    while(running) {
-		     BufferStrategy bs = canvas.getBufferStrategy();
-		     if(bs==null){
-		         canvas.createBufferStrategy(4);
-		         iterateNext = false;
-		     } else {
-		    	 	iterateNext = true;
-		     }
-		     if(iterateNext) {
-		    	 	loop.update();
-			    Graphics2D g = (Graphics2D) bs.getDrawGraphics();
-			    canvas.draw(g);
-			    Main.wait(Main.LOOP_SPEED_MS);
+		    BufferStrategy bs = canvas.getBufferStrategy();
+		    if(bs==null){
+		        canvas.createBufferStrategy(4);
+		        iterateNext = false;
+		    } else {
+		   	 	iterateNext = true;
+		    }
+		    if(iterateNext) {
+		    	loop.update();
+			  
+		    	Graphics2D g = (Graphics2D) bs.getDrawGraphics();
+		    	
+			    Main.wait(Main.LOOP_SPEED_MS);	 
 			    bs.show();
-		     }
+			    canvas.draw(g);
+		    }
 	    }
 	}
-	
 }
 

@@ -23,8 +23,10 @@ public class GameLoop {
 	public GUIFrame frame;
 	private Player player;
 	private World world;
+	private long time;
 
 	public GameLoop() {
+		time = System.currentTimeMillis();
 	}
 	
 	public void update() {	
@@ -32,19 +34,24 @@ public class GameLoop {
 		player.updateSprite();
 		
 		ArrayList<Building> buildings = this.world.getBuildings();
-	
 		
-		for(Building b: buildings) {
-			b.tick();
-			String resources = "";
-			for(Consumable c: b.getConsumables()) {
-				resources += c.getName() + " Level: " + c.getAmount() + " ";
+		if(System.currentTimeMillis() - time >= 1000) {
+			this.world.distributeResources();
+			for(Building b: buildings) {
+				//b.tick();
+				String resources = "";
+				for(Consumable c: b.getConsumables()) {
+					resources += c.getName() + " Level: " + c.getAmount() + " ";
+				}
+					
+				System.out.println(resources);
 			}
-			
-			System.out.println(resources);
+			time = System.currentTimeMillis();		
 		}
+
+		long time = System.currentTimeMillis();
 		
-		this.world.distributeResources();
+		
 		
 		if(queue.isEventToProcess()) {
 			event = queue.getEvent();
@@ -93,8 +100,12 @@ public class GameLoop {
 					int[] pos = Camera.screenToWorld(x, y);
 					
 					player.connectBuilding(pos[0], pos[1]);
+				} else if(event.isMouseRightButton()) {
+					canvas.updateHover(event.getMouseX(), event.getMouseY());
 				}
 			}
+			
+			
 		}
 	}
 

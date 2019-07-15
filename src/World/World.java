@@ -86,7 +86,7 @@ public class World {
 	}
 	
 	public void distributeResources() {
-		this.network.transferResource("Oxygen");
+		this.network.transferResources();
 	}
 	
 	public void placeBuilding(int ID, int x, int y) {
@@ -95,7 +95,12 @@ public class World {
 		b.setX(x);
 		b.setY(y);
 		this.buildings.add(b);
-		this.buildingsLayer[y][x] = this.buildings.size();
+		for(int i = y; i < y+b.getHeight(); i ++) {
+			for(int ii = x; ii < x+b.getWidth(); ii ++) {
+				System.out.println("HI");
+				this.buildingsLayer[i][ii] = this.buildings.size();
+			}
+		}
 		this.network.addBuilding(b);
 	}
 	
